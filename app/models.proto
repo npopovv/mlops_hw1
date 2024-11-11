@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package model;
+
+service ModelService {
+    rpc TrainModel (TrainRequest) returns (TrainResponse);
+    rpc GetModels (Empty) returns (ModelList);
+    rpc Predict (PredictRequest) returns (PredictResponse);
+    rpc DeleteModel (DeleteRequest) returns (DeleteResponse);
+    rpc Status (Empty) returns (StatusResponse);
+}
+
+message Empty {}
+
+
+message TrainRequest {
+    string model_type = 1;
+    map<string, string> params = 2;
+}
+
+message TrainResponse {
+    int32 model_id = 1;
+}
+
+message ModelList {
+    repeated ModelInfo models = 1;
+}
+
+message ModelInfo {
+    int32 id = 1;
+    string type = 2;
+}
+
+message PredictRequest {
+    int32 model_id = 1;
+    string data = 2;
+}
+
+message PredictResponse {
+    repeated float prediction = 1;
+}
+
+message DeleteRequest {
+    int32 model_id = 1;
+}
+
+message DeleteResponse {
+    string status = 1;
+}
+
+message StatusResponse {
+    string status = 1;
+}
+
+message GetModelsRequest {}
