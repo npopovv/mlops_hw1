@@ -1,7 +1,0 @@
-2024-11-27 20:22:02,723 - app.main - INFO - API call to train model of type ModelType.LOGISTIC with params: {}
-2024-11-27 20:22:02,724 - app.models - INFO - Starting training for model type: ModelType.LOGISTIC
-2024-11-27 20:22:02,734 - app.models - INFO - Model trained and saved with ID: 1
-2024-11-27 20:22:02,734 - app.main - INFO - Model trained with ID: 1
-2024-11-27 20:24:09,956 - app.main - INFO - API call to predict with model ID: 1 and data: [100.0, 100.0, 100.0, 100.0, 100.0]
-2024-11-27 20:24:09,956 - app.models - INFO - Received data for prediction with model ID: 1
-2024-11-27 20:24:09,957 - app.models - INFO - Prediction result: [1]
