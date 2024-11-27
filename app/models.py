@@ -1,20 +1,12 @@
 from enum import Enum
 import random
 import joblib
-import logging
+from app.logging_config import setup_logger
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 
-# Настройка логгера
-logging.basicConfig(
-    level=logging.INFO,  # Уровень логирования
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',  # Формат сообщения
-    handlers=[
-        logging.FileHandler("app.log"),  # Запись логов в файл app.log
-        logging.StreamHandler()  # Вывод логов также в консоль
-    ]
-)
-logger = logging.getLogger(__name__)  # Инициализация логгера для текущего модуля
+#настроенный логгер
+logger = setup_logger(name = __name__)
 
 class ModelType(str, Enum):
     LOGISTIC = "logistic"
@@ -25,7 +17,7 @@ class ModelManager:
         self.models = {}
         self.next_id = 1
 
-    def train(self, model_type: ModelType, params: dict):
+    def train(self, model_type: ModelType, params: dict, X_train, y_train):
         logger.info(f"Starting training for model type: {model_type}")
         
         if model_type == ModelType.LOGISTIC:
@@ -36,7 +28,7 @@ class ModelManager:
             logger.error("Unknown model type")
             raise ValueError("Unknown model type")
 
-        model.fit([[random.random() for _ in range(5)] for _ in range(100)], [random.randint(0, 1) for _ in range(100)])
+        model.fit(X_train, y_train)
         model_id = self.next_id
         self.models[model_id] = model
         self.next_id += 1

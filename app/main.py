@@ -1,33 +1,48 @@
 from fastapi import FastAPI, HTTPException
 from app.models import ModelManager, ModelType
-import logging
+from app.logging_config import setup_logger
+from pydantic import BaseModel, Field
+from typing import List
 
-# Настройка логгера
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+#настроенны логгер
+logger = setup_logger(name = __name__)
 
-
-# Настройка логгера
-logging.basicConfig(
-    level=logging.INFO,  # Уровень логирования
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',  # Формат сообщения
-    handlers=[
-        logging.FileHandler("app.log"),  # Запись логов в файл app.log
-        logging.StreamHandler()  # Вывод логов также в консоль
-    ]
-)
-logger = logging.getLogger(__name__)  # Инициализация логгера для текущего модуля
 app = FastAPI()
 model_manager = ModelManager()
 
+#валидация входных данных
+class TrainRequest(BaseModel):
+    model_type: ModelType
+    params: dict = Field(default_factory=dict, description='model hyperparams')
+    X_train: List[List[float]] = Field(default = [
+                                       [10, 12, 13, 12, 15],
+                                       [0.1, 0.2, 0.3, 0.6, 0.2],
+                                       [11, 13, 13, 15, 20],
+                                       [0.2, 0.6, 0.1, 0.22, 0.3]
+                                        ], description = 'features')
+    
+    y_train: List[int] = Field(
+        default = [1, 0, 1, 0],
+        description = 'target'
+    )
+
+
+
 @app.post("/train/")
-async def train_model(model_type: ModelType, params: dict):
-    logger.info(f"API call to train model of type {model_type} with params: {params}")
+async def train_model(request: TrainRequest):
+    logger.info(f"API call to train model of type {request.model_type} with params: {request.params}")
     
     try:
-        model_id = model_manager.train(model_type, params)
+        model_id = model_manager.train(
+            model_type = request.model_type,
+            params = request.params,
+            X_train = request.X_train,
+            y_train = request.y_train
+
+        )
         logger.info(f"Model trained with ID: {model_id}")
         return {"model_id": model_id}
+    
     except Exception as e:
         logger.error(f"Training failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
