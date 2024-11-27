@@ -37,7 +37,7 @@ elif action == "Просмотр моделей":
         models = response.json()
         if models:
             for model in models:
-                st.write(f"ID: {model['id']}, Тип: {model['type']}")
+                st.write(f"ID: {model['id']}")
         else:
             st.write("Нет доступных моделей.")
     else:
