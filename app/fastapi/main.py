@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from app.models import ModelManager, ModelType
-from app.logging_config import setup_logger
+from app.fastapi.logging_config import setup_logger
 from pydantic import BaseModel, Field
 from typing import List
 import psutil
