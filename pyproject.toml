@@ -16,6 +16,7 @@ grpcio-tools = "^1.67.1"
 streamlit = "^1.40.0"
 requests = "^2.32.3"
 python-multipart = "^0.0.17"
+psutil = "^6.1.0"
 
 
 [build-system]

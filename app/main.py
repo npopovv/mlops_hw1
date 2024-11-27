@@ -3,8 +3,10 @@ from app.models import ModelManager, ModelType
 from app.logging_config import setup_logger
 from pydantic import BaseModel, Field
 from typing import List
+import psutil
+from datetime import datetime
 
-#настроенны логгер
+#настроенный логгер
 logger = setup_logger(name = __name__)
 
 app = FastAPI()
@@ -76,7 +78,27 @@ async def delete_model(model_id: int):
         logger.error(f"Deletion failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.get("/status/")
 async def status():
     logger.info("API call to get status")
-    return {"status": "running"}
+
+    # Получение системных метрик
+    memory_info = psutil.virtual_memory()  # Информация об оперативной памяти
+    uptime = datetime.now() - datetime.fromtimestamp(psutil.boot_time())  # Время работы системы
+
+    # метрика
+    custom_metric = "Все сервисы работают штатно" if memory_info.percent < 80 else "Высокая нагрузка"
+
+    # Возврат данных
+    return {
+        "status": "running",
+        "memory_usage": {
+            "total": memory_info.total,
+            "available": memory_info.available,
+            "used": memory_info.used,
+            "percent": memory_info.percent
+        },
+        "uptime": str(uptime),  # Формат времени работы
+        "business_logic_metric": custom_metric
+    }
