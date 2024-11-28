@@ -1,69 +1,129 @@
 import streamlit as st
 import requests
+import json
 
-# URL FastAPI-сервиса
-API_URL = "http://127.0.0.1:8000"
+# Настройки Streamlit
+st.set_page_config(
+    page_title="Model Management Dashboard",
+    layout="wide",
+)
 
-st.title("Управление ML моделями")
+# Основной заголовок
+st.title("Model Management Service Dashboard")
+st.markdown("Управляйте обучением, предсказаниями и мониторингом моделей через веб-интерфейс.")
 
-# Выбор действия
-st.sidebar.title("Навигация")
-action = st.sidebar.selectbox("Выберите действие", ["Обучение модели", "Просмотр моделей", "Предсказание", "Удаление модели"])
+# Базовый URL API
+BASE_URL = "http://localhost:8000"
 
-# Функция для обучения модели
-if action == "Обучение модели":
-    st.header("Обучение модели")
-    model_type = st.selectbox("Тип модели", ["logistic", "random_forest"])
-    params = {}
-    if model_type == "logistic":
-        params["max_iter"] = st.number_input("Количество итераций (max_iter)", min_value=100, value=100)
-    elif model_type == "random_forest":
-        params["n_estimators"] = st.number_input("Число деревьев (n_estimators)", min_value=10, value=10)
-        params["max_depth"] = st.number_input("Максимальная глубина (max_depth)", min_value=1, value=5)
 
-    if st.button("Начать обучение"):
-        # Изменено на отправку параметров запроса вместо JSON-тела
-        response = requests.post(f"{API_URL}/train/?model_type={model_type}", json=params)
+# Функция для получения списка моделей
+def get_models():
+    try:
+        response = requests.get(f"{BASE_URL}/models/")
         if response.status_code == 200:
-            st.success(f"Модель успешно обучена с ID: {response.json()['model_id']}")
+            return response.json()
         else:
-            st.error(f"Ошибка: {response.json()['detail']}")
+            st.error("Ошибка при получении списка моделей.")
+            return []
+    except Exception as e:
+        st.error(f"Ошибка подключения: {e}")
+        return []
 
-# Функция для просмотра моделей
-elif action == "Просмотр моделей":
-    st.header("Доступные модели")
-    response = requests.get(f"{API_URL}/models/")
-    if response.status_code == 200:
-        models = response.json()
-        if models:
-            for model in models:
-                st.write(f"ID: {model['id']}")
+
+# Функция для получения статуса сервиса
+def get_status():
+    try:
+        response = requests.get(f"{BASE_URL}/status/")
+        if response.status_code == 200:
+            return response.json()
         else:
-            st.write("Нет доступных моделей.")
-    else:
-        st.error(f"Ошибка: {response.json()['detail']}")
+            st.error("Ошибка при получении статуса.")
+            return {}
+    except Exception as e:
+        st.error(f"Ошибка подключения: {e}")
+        return {}
 
-# Функция для предсказания
-elif action == "Предсказание":
-    st.header("Предсказание")
+
+# Дашборд: Статус сервиса
+st.header("Системный статус")
+status = get_status()
+
+if status:
+    col1, col2 = st.columns(2)
+    with col1:
+        st.metric("Состояние", status.get("status", "Unknown"))
+        st.metric("Использование памяти (%)", status["memory_usage"]["percent"])
+    with col2:
+        st.metric("Всего памяти", f"{status['memory_usage']['total'] / (1024**3):.2f} GB")
+        st.metric("Доступно памяти", f"{status['memory_usage']['available'] / (1024**3):.2f} GB")
+    st.write("Метрика бизнес-логики:", status.get("business_logic_metric", "Нет данных"))
+    st.write("Время работы системы:", status.get("uptime", "Нет данных"))
+
+# Дашборд: Список моделей
+st.header("Доступные модели")
+models = get_models()
+
+if models:
+    for model in models:
+        with st.expander(f"Модель ID: {model['id']}"):
+            st.write(f"")
+            # st.write(f"Параметры: {json.dumps(model['params'], indent=2)}")
+
+# Обучение модели
+st.header("Обучение новой модели")
+with st.form("train_model_form"):
+    model_type = st.text_input("Тип модели")
+    params = st.text_area("Параметры модели (JSON)")
+    X_train = st.text_area("Данные для обучения (X_train)")
+    y_train = st.text_area("Данные для обучения (y_train)")
+    submitted = st.form_submit_button("Запустить обучение")
+
+    if submitted:
+        try:
+            payload = {
+                "model_type": model_type,
+                "params": json.loads(params),
+                "X_train": json.loads(X_train),
+                "y_train": json.loads(y_train),
+            }
+            response = requests.post(f"{BASE_URL}/train/", json=payload)
+            if response.status_code == 200:
+                st.success(f"Модель успешно обучена! ID: {response.json()['model_id']}")
+            else:
+                st.error(f"Ошибка обучения: {response.json().get('detail', 'Неизвестная ошибка')}")
+        except Exception as e:
+            st.error(f"Ошибка отправки запроса: {e}")
+
+# Предсказание
+st.header("Предсказание")
+with st.form("predict_form"):
     model_id = st.number_input("ID модели", min_value=1, step=1)
-    data = st.text_input("Введите данные (через запятую, например: 0.1,0.2,0.3,0.4,0.5)")
-    data_list = [float(x) for x in data.split(",") if x]
+    data = st.text_input("Данные для предсказания (через пробел)")
+    predict_submitted = st.form_submit_button("Получить предсказание")
 
-    if st.button("Сделать предсказание"):
-        response = requests.post(f"{API_URL}/predict/", json={"model_id": model_id, "data": data_list})
-        if response.status_code == 200:
-            st.success(f"Предсказание: {response.json()['prediction']}")
-        else:
-            st.error(f"Ошибка: {response.json()['detail']}")
+    if predict_submitted:
+        try:
+            response = requests.post(f"{BASE_URL}/predict/", params={"model_id": model_id, "data": data})
+            if response.status_code == 200:
+                st.success(f"Результат предсказания: {response.json()['prediction']}")
+            else:
+                st.error(f"Ошибка предсказания: {response.json().get('detail', 'Неизвестная ошибка')}")
+        except Exception as e:
+            st.error(f"Ошибка отправки запроса: {e}")
 
-# Функция для удаления модели
-elif action == "Удаление модели":
-    st.header("Удаление модели")
-    model_id = st.number_input("ID модели для удаления", min_value=1, step=1)
-    if st.button("Удалить модель"):
-        response = requests.delete(f"{API_URL}/delete/", params={"model_id": model_id})
-        if response.status_code == 200:
-            st.success("Модель успешно удалена.")
-        else:
-            st.error(f"Ошибка: {response.json()['detail']}")
+
+# Удаление модели
+st.header("Удаление модели")
+with st.form("delete_form"):
+    delete_model_id = st.number_input("ID модели для удаления", min_value=1, step=1)
+    delete_submitted = st.form_submit_button("Удалить модель")
+
+    if delete_submitted:
+        try:
+            response = requests.delete(f"{BASE_URL}/delete/", params={"model_id": delete_model_id})
+            if response.status_code == 200:
+                st.success("Модель успешно удалена.")
+            else:
+                st.error(f"Ошибка удаления: {response.json().get('detail', 'Неизвестная ошибка')}")
+        except Exception as e:
+            st.error(f"Ошибка отправки запроса: {e}")
