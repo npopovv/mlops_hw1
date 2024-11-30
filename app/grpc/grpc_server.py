@@ -1,15 +1,15 @@
 import grpc
 from concurrent import futures
 from app.logging_config import setup_logger
-import os
 import sys
-from app.models import ModelManager 
+from app.models import ModelManager
 
-sys.path.insert(0, '/home/nikita/mlops_hw1/app/grpc/generated')
+sys.path.insert(0, "/home/nikita/mlops_hw1/app/grpc/generated")
 import app.grpc.generated.models_pb2 as models_pb2
 import app.grpc.generated.models_pb2_grpc as models_pb2_grpc
 
 logger = setup_logger(__name__)
+
 
 class ModelServiceServicer(models_pb2_grpc.ModelServiceServicer):
     def __init__(self):
@@ -17,7 +17,9 @@ class ModelServiceServicer(models_pb2_grpc.ModelServiceServicer):
         self.model_manager = ModelManager()
 
     def TrainModel(self, request, context):
-        logger.info(f"gRPC call to train model of type {request.model_type} with params: {request.params}")
+        logger.info(
+            f"gRPC call to train model of type {request.model_type} with params: {request.params}"
+        )
         try:
             model_type = request.model_type
             params = dict(request.params)
@@ -34,12 +36,13 @@ class ModelServiceServicer(models_pb2_grpc.ModelServiceServicer):
             context.set_code(grpc.StatusCode.INTERNAL)
             return models_pb2.TrainResponse()
 
-
     def GetModels(self, request, context):
         logger.info("gRPC call to get list of models")
         try:
             models = self.model_manager.get_available_models()
-            model_list = [models_pb2.ModelInfo(id=m['id'], type="unknown") for m in models]
+            model_list = [
+                models_pb2.ModelInfo(id=m["id"], type="unknown") for m in models
+            ]
             return models_pb2.ModelList(models=model_list)
         except Exception as e:
             logger.error(f"GetModels failed: {e}")
@@ -74,14 +77,15 @@ class ModelServiceServicer(models_pb2_grpc.ModelServiceServicer):
         logger.info("gRPC call to get status")
         return models_pb2.StatusResponse(status="running")
 
+
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     models_pb2_grpc.add_ModelServiceServicer_to_server(ModelServiceServicer(), server)
-    server.add_insecure_port('[::]:50051')
+    server.add_insecure_port("[::]:50051")
     logger.info("Starting gRPC server on port 50051")
     server.start()
     server.wait_for_termination()
 
-if __name__ == '__main__':
-    serve()
 
+if __name__ == "__main__":
+    serve()

@@ -22,3 +22,12 @@ psutil = "^6.1.0"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+exclude = '\.venv|app/grpc/generated'
+
+[tool.ruff]
+exclude = [
+    ".venv/*",
+    "app/grpc/generated/*.py"
+]

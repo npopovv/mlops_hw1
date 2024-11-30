@@ -1,6 +1,9 @@
 import logging
 
-def setup_logger(name: str = None, log_file: str = "app.log", level: int = logging.INFO):
+
+def setup_logger(
+    name: str = None, log_file: str = "app.log", level: int = logging.INFO
+):
     """
     Настраивает логгер с указанным именем, файлом и уровнем логирования.
     :param name: Имя логгера (по умолчанию None для root-логгера).

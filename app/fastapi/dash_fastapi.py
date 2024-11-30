@@ -10,7 +10,9 @@ st.set_page_config(
 
 # Основной заголовок
 st.title("Model Management Service Dashboard")
-st.markdown("Управляйте обучением, предсказаниями и мониторингом моделей через веб-интерфейс.")
+st.markdown(
+    "Управляйте обучением, предсказаниями и мониторингом моделей через веб-интерфейс."
+)
 
 # Базовый URL API
 BASE_URL = "http://localhost:8000"
@@ -54,9 +56,16 @@ if status:
         st.metric("Состояние", status.get("status", "Unknown"))
         st.metric("Использование памяти (%)", status["memory_usage"]["percent"])
     with col2:
-        st.metric("Всего памяти", f"{status['memory_usage']['total'] / (1024**3):.2f} GB")
-        st.metric("Доступно памяти", f"{status['memory_usage']['available'] / (1024**3):.2f} GB")
-    st.write("Метрика бизнес-логики:", status.get("business_logic_metric", "Нет данных"))
+        st.metric(
+            "Всего памяти", f"{status['memory_usage']['total'] / (1024**3):.2f} GB"
+        )
+        st.metric(
+            "Доступно памяти",
+            f"{status['memory_usage']['available'] / (1024**3):.2f} GB",
+        )
+    st.write(
+        "Метрика бизнес-логики:", status.get("business_logic_metric", "Нет данных")
+    )
     st.write("Время работы системы:", status.get("uptime", "Нет данных"))
 
 # Дашборд: Список моделей
@@ -66,7 +75,7 @@ models = get_models()
 if models:
     for model in models:
         with st.expander(f"Модель ID: {model['id']}"):
-            st.write(f"")
+            st.write("")
             # st.write(f"Параметры: {json.dumps(model['params'], indent=2)}")
 
 # Обучение модели
@@ -90,7 +99,9 @@ with st.form("train_model_form"):
             if response.status_code == 200:
                 st.success(f"Модель успешно обучена! ID: {response.json()['model_id']}")
             else:
-                st.error(f"Ошибка обучения: {response.json().get('detail', 'Неизвестная ошибка')}")
+                st.error(
+                    f"Ошибка обучения: {response.json().get('detail', 'Неизвестная ошибка')}"
+                )
         except Exception as e:
             st.error(f"Ошибка отправки запроса: {e}")
 
@@ -103,11 +114,15 @@ with st.form("predict_form"):
 
     if predict_submitted:
         try:
-            response = requests.post(f"{BASE_URL}/predict/", params={"model_id": model_id, "data": data})
+            response = requests.post(
+                f"{BASE_URL}/predict/", params={"model_id": model_id, "data": data}
+            )
             if response.status_code == 200:
                 st.success(f"Результат предсказания: {response.json()['prediction']}")
             else:
-                st.error(f"Ошибка предсказания: {response.json().get('detail', 'Неизвестная ошибка')}")
+                st.error(
+                    f"Ошибка предсказания: {response.json().get('detail', 'Неизвестная ошибка')}"
+                )
         except Exception as e:
             st.error(f"Ошибка отправки запроса: {e}")
 
@@ -120,10 +135,14 @@ with st.form("delete_form"):
 
     if delete_submitted:
         try:
-            response = requests.delete(f"{BASE_URL}/delete/", params={"model_id": delete_model_id})
+            response = requests.delete(
+                f"{BASE_URL}/delete/", params={"model_id": delete_model_id}
+            )
             if response.status_code == 200:
                 st.success("Модель успешно удалена.")
             else:
-                st.error(f"Ошибка удаления: {response.json().get('detail', 'Неизвестная ошибка')}")
+                st.error(
+                    f"Ошибка удаления: {response.json().get('detail', 'Неизвестная ошибка')}"
+                )
         except Exception as e:
             st.error(f"Ошибка отправки запроса: {e}")
