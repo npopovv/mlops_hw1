@@ -2,21 +2,18 @@ syntax = "proto3";
 
 package model;
 
-service ModelService {
-    rpc TrainModel (TrainRequest) returns (TrainResponse);
-    rpc GetModels (Empty) returns (ModelList);
-    rpc Predict (PredictRequest) returns (PredictResponse);
-    rpc DeleteModel (DeleteRequest) returns (DeleteResponse);
-    rpc Status (Empty) returns (StatusResponse);
+message Row {
+    repeated float data = 1;
 }
-
-message Empty {}
-
 
 message TrainRequest {
     string model_type = 1;
     map<string, string> params = 2;
+    repeated Row X_train = 3;
+    repeated int32 y_train = 4;
 }
+
+message Empty {}
 
 message TrainResponse {
     int32 model_id = 1;
@@ -52,4 +49,11 @@ message StatusResponse {
     string status = 1;
 }
 
-message GetModelsRequest {}
+
+service ModelService {
+    rpc TrainModel (TrainRequest) returns (TrainResponse);
+    rpc GetModels (Empty) returns (ModelList);
+    rpc Predict (PredictRequest) returns (PredictResponse);
+    rpc DeleteModel (DeleteRequest) returns (DeleteResponse);
+    rpc Status (Empty) returns (StatusResponse);
+}
